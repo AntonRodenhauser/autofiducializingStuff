@@ -30,9 +30,9 @@ function results = driver_autofiducialize
 %%%%%%%%%%%%%%%%%  settings for fiducial detection %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % accuracy = 0.9;  % abort condition for beat envelope detection
-fidsKernelLength = 20;  % it will be: kernel_indices = [fidsValue-fidsKernelLength : fidsValue+fidsKernelLength]
+fidsKernelLength = 10;  % it will be: kernel_indices = [fidsValue-fidsKernelLength : fidsValue+fidsKernelLength]
 % to find a fid with a certain fidvalue, the kernel will be:  kernel = potvals(kernel_indices,:)
-window_width = 40;   % dont search complete beat, but only a window potvals(ws:we,:) with
+window_width = 20;   % dont search complete beat, but only a window potvals(ws:we,:) with
 % ws=bs+loc_fidsValues(fidNumber)-window_width;  
 % we=bs+loc_fidsValues(fidNumber)+window_width;
 % windowFrames = [ws:we]
@@ -155,13 +155,13 @@ for seedFileIdx = 1:length(allSeedFiles)
     %%%% now loop through the beatFiles and assemble the results
     [seedFilePath, seedFileName,~] = fileparts(allSeedFiles{seedFileIdx});
     for beatFileIdx = 1:length(allBeatFiles{seedFileIdx})
-        [beatFilePath, beatFileName,~] = fileparts(allBeatFiles{seedFileIdx}{beatFileIdx});
+        [beatFilePath, beatFileName,ext] = fileparts(allBeatFiles{seedFileIdx}{beatFileIdx});
         
         
         results(count).seedFilePath = seedFilePath;
         results(count).beatFilePath = beatFilePath;
-        results(count).seedFileName = seedFileName;
-        results(count).beatFileName = beatFileName;
+        results(count).seedFileName = [seedFileName, ext];
+        results(count).beatFileName = [beatFileName, ext];
         results(count).fiducials = beatFileFids{beatFileIdx};
         results(count).settings = settings;
         results(count).infostring = infostring;
@@ -173,13 +173,14 @@ end
 if isgraphics(h), close(h); end
 
 
+%%%% add the filename Tags
+results = addFilenameTags(results);
 
 
 
 %%%% save results
-autoResults = results;
-disp('autoResults saved in current folder')
-save('autoResults','autoResults')
+disp('results saved in current folder')
+save('results','results')
 
 
 

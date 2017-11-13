@@ -1,4 +1,8 @@
-function allFids = getFidsOfBeatsBasedOnSeed(seedFile, beatFiles,settings)
+function allFids = BACKUP_ORIGINAL_getFidsOfBeatsBasedOnSeed(seedFile, beatFiles,settings)
+% this is just a backup of the function getFidsOfBeatsBasedOnSeed in a
+% working state
+
+
 % this function fiducializes the beats in beatFiles using the seedTS in seedFile as a seed
 % inputs:
 %   - beatFiles = { filenameBeat1, filenameBeat2, ..... }        cellarrays with full paths to ts structures that contains the beatTSs we want to autofiducialize
@@ -44,60 +48,21 @@ nFrames = size(beatTS.potvals,2);
 window_width = settings.window_width;
 fidsKernelLength = settings.fidsKernelLength;
 
-%%%% check if window 'to big'
-if 2 * window_width +1 > nFrames
-    disp('ERROR: window_width to high. Window does not fit into beat')
-    error('window_width to high')
-end
-
 %%%% get the oriFids, the fids that we want to autofiducialize, from fiducialized_ts,  clear any non-global fids from it
 if isfield(seedTS,'fids')
-    [fidTypes, fidValues] = getFidsTypesAndValuesFromFids(seedTS.fids);
+    [fidsTypes, fidsValues] = getFidsTypesAndValuesFromFids(seedTS.fids);
 else
     disp('ERROR: the seedFile does not contain ts.fids.')
     error('no ts.fids in seedFile')
 end
 
-nFids=length(fidTypes);
+nFids=length(fidsTypes);
 
 
-%%%% set up the fsk ("fiducial start kernel")  and fek, make sure they are not out of range
-fsk = fidValues - fidsKernelLength;   % fiducial start kernel,  the index in potvals where the kernel for fiducials starts
-fek = fidValues + fidsKernelLength;   % analog to fsk, but 'end'
-% make sure kernel not out of range..
-for fidIdx = 1:length(fidValues)
-    if fsk(fidIdx) < 1  % if kernel 'to far left', shift it to the right!
-        shift = - fsk(fidIdx) + 1;
-        fsk(fidIdx) = 1;
-        fek(fidIdx) = fek(fidIdx) + shift;
-    elseif fek(fidIdx) > nFrames  % if kernel 'to far right', shift it to the left!
-        shift = nFrames - fek(fidIdx);
-        fsk(fidIdx) = fsk(fidIdx) + shift;
-        fek(fidIdx) = nFrames;
-    end
-end
+%%%% set up the fsk and fek 
+fsk = fidsValues - fidsKernelLength;   % fiducial start kernel,  the index in potvals where the kernel for fiducials starts
+fek = fidsValues + fidsKernelLength;   % analog to fsk, but 'end'
 
-%%%% get window start/end indeces for each fid
-bs = 1; % in this case beat start is always 1
-ws=bs+fidValues-window_width;  %window start indeces
-we=bs+fidValues+window_width;  %window end indeces
-for fidIdx = 1:length(fidValues)
-    if ws(fidIdx) < 1  % if window 'to far left', shift it to the right!
-        shift = - ws(fidIdx) + 1;
-        ws(fidIdx) = 1;
-        we(fidIdx) = we(fidIdx) + shift;
-    elseif we(fidIdx) > nFrames  % if window 'to far right', shift it to the left!
-        shift = nFrames - we(fidIdx);
-        ws(fidIdx) = ws(fidIdx) + shift;
-        we(fidIdx) = nFrames;
-    end
-end
-
-% %%%% shift the kernel/window for t_start by 20
-% tStartIdx = find(fidTypes == 5);
-% fsk(tStartIdx) = fsk(tStartIdx) + 20;
-% fek(tStartIdx) = fek(tStartIdx) + 20;
-% disp('shifting t_kernel by 20')
 
 
 %%%% now get nToBeFiducialized leads from fullPotvals,
@@ -124,11 +89,14 @@ end
 % example: kernel(3,:,5)  is kernel for the 3rd lead and the 5th fiducial (in fidsTypes)
 
 
-
+%%%% get window start/end indeces for each fid
+bs = 1; % in this case beat start is always 1
+ws=bs+fidsValues-window_width;  %window start indeces
+we=bs+fidsValues+window_width;  %window end indeces
 
 
 global testing
-disp('remove this')
+disp('remove this (line 96 in getFidsOfBeatsBasedOnSeeds')
 
 
 
@@ -140,25 +108,27 @@ else
     fids(nFids).type = []; %pre-allocate
 end
 for fidIdx=1:nFids
-
     %%%% set up windows
+    
+    if ws(fidIdx) < 1 || we(fidIdx) > nFrames
+        fprintf('WARNING: Fiducial of type %s to close to beat envelope for autofiducializing. Skipping fiducial...',fidsTypes(fidIdx))
+        return
+    end
     windows=reducedBeatPotvals(:, ws(fidIdx):we(fidIdx));
 
     %%%% find fids
-%    [winFrGlobFid, indivFids, ~] = findFid(windows,kernels(:,:,fidIdx));   % the ignored outputs here are: individual fids of the leadsToBeFiducialized and the variances..
-    [winFrGlobFid, indivFids, ~] = downsample_findFid(windows,kernels(:,:,fidIdx),stepsize);   % the ignored outputs here are: individual fids of the leadsToBeFiducialized and the variances..
-
-    locFrGlobFid=winFrGlobFid + fidValues(fidIdx) - fsk(fidIdx) + ws(fidIdx) - 1;      % put it into "complete potvals" frame
+    [winFrGlobFid, indivFids, ~] = findFid(windows,kernels(:,:,fidIdx));   % the ignored outputs here are: individual fids of the leadsToBeFiducialized and the variances..
+    locFrGlobFid=winFrGlobFid + fidsKernelLength + ws(fidIdx) - 1;      % put it into "complete potvals" frame
 
     
     %%%% add the global fid to allFids
-    fids(fidIdx).type=fidTypes(fidIdx);
+    fids(fidIdx).type=fidsTypes(fidIdx);
     fids(fidIdx).value=locFrGlobFid;
     
     
     if testing
-        indFids(fidIdx).type=fidTypes(fidIdx);
-        indFids(fidIdx).value=indivFids + fidValues(fidIdx) - fsk(fidIdx) + ws(fidIdx) - 1;
+        indFids(fidIdx).type=fidsTypes(fidIdx);
+        indFids(fidIdx).value=indivFids + fidsKernelLength + ws(fidIdx) - 1;
     end
     
 end
@@ -171,8 +141,8 @@ if testing
     global testdata
     testdata.fsk = fsk;
     testdata.fek = fek;
-    testdata.fidsTypes = fidTypes;
-    testdata.fidsValues  = fidValues;
+    testdata.fidsTypes = fidsTypes;
+    testdata.fidsValues  = fidsValues;
     testdata.ws = ws;
     testdata.we =we;
     testdata.kernels = kernels;
@@ -186,13 +156,8 @@ if testing
     beatFilenames{end+1} = beatTS.filename;
     filenameTag{end+1} = beatTS.original_file_name;
 
-    if length(rbpv) > 32
-        testdata.allIndFids = allIndFids;
-        testdata.allFids = allFids;
-        testdata.beatFilenames = beatFilenames;
-        testdata.filenameTag = filenameTag;
-        testdata.rbpv = rbpv;
-        disp('last beat')
+    if length(rbpv) > 10
+        error('end it')
     end
 end
 

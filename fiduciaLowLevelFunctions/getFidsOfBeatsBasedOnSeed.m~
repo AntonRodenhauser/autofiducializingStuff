@@ -146,7 +146,7 @@ for fidIdx=1:nFids
 
     %%%% find fids
 %    [winFrGlobFid, indivFids, ~] = findFid(windows,kernels(:,:,fidIdx));   % the ignored outputs here are: individual fids of the leadsToBeFiducialized and the variances..
-    [winFrGlobFid, indivFids, ~] = downsample_findFid(windows,kernels(:,:,fidIdx),stepsize);   % the ignored outputs here are: individual fids of the leadsToBeFiducialized and the variances..
+    [winFrGlobFid, indivFids, ~] = downsample_findFid(windows,kernels(:,:,fidIdx));   % the ignored outputs here are: individual fids of the leadsToBeFiducialized and the variances..
 
     locFrGlobFid=winFrGlobFid + fidValues(fidIdx) - fsk(fidIdx) + ws(fidIdx) - 1;      % put it into "complete potvals" frame
 

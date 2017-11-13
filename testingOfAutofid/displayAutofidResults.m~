@@ -2,17 +2,17 @@ function displayAutofidResults
 % just for testing/playing around
 
 load('manualResults')
-manuResults = results;
+results1 = results;
 
-% load('autoResW60K30KS07')
-% results2=results;
+load('autoResW60K30')
+results2=results;
 
-load('testdataW20K10')
+load('testdataW40K20')
 
 
 % displayDifferencesOfAllFids(results1,results2)
 
-showIndividualLeadsAndIndFidsCompareManuAuto(testdata,manuResults)
+showIndividualLeadsAndIndFidsCompareManuAuto(testdata,results1)
 
 
 
@@ -51,20 +51,22 @@ numRepetetion = 3;
 
 
 
+
+
+
+
 function showIndividualLeadsAndIndFidsCompareManuAuto(testdata,manualResults)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% plot a lead in each supblot and show windows, manFid and autoFid
-beatIdx = 8;  % which beats to plot
-fidIdx = 4;         % which index in fidsTypes = [2,4,5,7,6]
-leads=[1 2 3 4 5 6 7 8 9 10];   % which leads in potvals
-
-
-%%%% here coding starts
+beatIdx =2;  % which beats to plot
+fidIdx = 3;         % which index in fidsTypes = [2,4,5,7,6]
 fidsTypes = [2,4,5,7,6];
 fidType = fidsTypes(fidIdx);
+leads=[1 2 3 4 5 6 7 8 9 10];   % which leads in potvals
 
+%%%% here coding starts
 plotWindow = testdata.ws(fidIdx):testdata.we(fidIdx);    % what frames to plot
 time = 1:size(testdata.reducedSeedPotvals,2);
 figure
@@ -80,12 +82,12 @@ for leadEnum = 1:length(leads)
     Ylim =  ylim;
     
     %%%% plot window
-    line([testdata.ws(fidIdx) testdata.ws(fidIdx)], Ylim, 'color','r','LineStyle','--')
-    line([testdata.we(fidIdx) testdata.we(fidIdx)], Ylim, 'color','r','LineStyle','--')
+    line([testdata.ws(fidIdx) testdata.ws(fidIdx)], Ylim, 'color','r')
+    line([testdata.we(fidIdx) testdata.we(fidIdx)], Ylim, 'color','r')
     
     %%%% plot kernel
-    line([testdata.fsk(fidIdx) testdata.fsk(fidIdx)], Ylim, 'color','m','LineStyle','--')
-    line([testdata.fek(fidIdx) testdata.fek(fidIdx)], Ylim, 'color','m','LineStyle','--')
+%     line([testdata.fsk(fidIdx) testdata.fsk(fidIdx)], Ylim, 'color','b')
+%     line([testdata.fek(fidIdx) testdata.fek(fidIdx)], Ylim, 'color','b')
 
     %%%% plot autofound indivFiducial
     autoFidValue = testdata.allIndFids{beatIdx}(fidIdx).value(leadIdx);
@@ -112,7 +114,6 @@ annotation('textbox', [0 0.9 1 0.1], ...
     'String', titlestring, ...
     'EdgeColor', 'none', ...
     'HorizontalAlignment', 'center','FontSize',15)
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

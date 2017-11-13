@@ -16,3 +16,7 @@ infostring = 'the fiducials done by Wilson';
 
 results = getResultsFromUserFidBeats(ProcessingDataPath, ScriptDataPath,PathToPFEIFER_lightOutput, 'infostring', infostring);
 
+
+
+%%%% save results
+ save('results','results')
